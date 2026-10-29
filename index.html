@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de Contatos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0f0e; --panel:#151816; --panel2:#1c201e; --hover:#202523; --line:#262b29; --line2:#343a37;
+    --text:#e9ebea; --muted:#8f9893; --green:#6fd09f; --green-d:#1f8a5c; --green-bg:rgba(111,208,159,.12);
+    --warn:#e8cf72; --err:#ff9f95; --ring:rgba(31,138,92,.35); --shadow:0 12px 40px rgba(0,0,0,.45);
+    --h:38px; --r:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .hidden{display:none!important}
+  .ico{width:16px;height:16px;flex:none}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:99px;border:2px solid var(--panel)}
+  ::-webkit-scrollbar-corner{background:transparent}
+
+  /* Campos e botões: todos com a mesma altura, para alinharem lado a lado. */
+  button,select,input{font:inherit;color:var(--text)}
+  input:not([type=checkbox]),select{height:var(--h);background:var(--panel2);border:1px solid var(--line);
+    border-radius:var(--r);padding:0 12px;transition:border-color .15s,box-shadow .15s}
+  input:not([type=checkbox]):hover,select:hover{border-color:var(--line2)}
+  input:focus,select:focus{outline:none;border-color:var(--green-d);box-shadow:0 0 0 3px var(--ring)}
+  input::placeholder{color:#69716c}
+  input[type=date]{color-scheme:dark}
+  select{appearance:none;padding-right:34px;cursor:pointer;background-repeat:no-repeat;background-position:right 12px center;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238f9893' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")}
+  select option{background:var(--panel2)}
+  input.search{padding-left:36px;background-repeat:no-repeat;background-position:12px center;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%238f9893' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E")}
+  input[type=checkbox]{width:16px;height:16px;margin:0;accent-color:var(--green-d);cursor:pointer}
+  button{height:var(--h);display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 16px;
+    background:var(--green-d);color:#fff;border:1px solid transparent;border-radius:var(--r);font-weight:500;
+    cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,filter .15s}
+  button:hover:not(:disabled){filter:brightness(1.12)}
+  button.ghost{background:var(--panel2);border-color:var(--line);color:var(--text)}
+  button.ghost:hover:not(:disabled){background:var(--hover);border-color:var(--line2);filter:none}
+  button.sm{height:32px;padding:0 12px;font-size:13px}
+  button:disabled{opacity:.45;cursor:default}
+
+  /* Topo */
+  header{position:sticky;top:0;z-index:10;background:rgba(13,15,14,.82);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line)}
+  .bar{max-width:1240px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px;flex:1;min-width:220px}
+  .logo{width:36px;height:36px;border-radius:10px;flex:none;display:grid;place-items:center;color:#fff;
+    background:linear-gradient(135deg,#34c486,#17704a);box-shadow:0 4px 14px rgba(31,138,92,.35)}
+  .brand h1{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .brand small{display:block;font-size:12px;color:var(--muted)}
+  .who{font-size:12px;color:var(--muted);padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+  .who:empty{display:none}
+  .auto{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
+  .auto input{appearance:none;width:32px;height:18px;border-radius:99px;background:var(--line2);position:relative;
+    transition:background .2s}
+  .auto input::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;transition:transform .2s}
+  .auto input:checked{background:var(--green-d)}
+  .auto input:checked::after{transform:translateX(14px)}
+
+  main{max-width:1240px;margin:0 auto;padding:24px 24px 48px}
+  .muted{color:var(--muted);font-size:12px;font-weight:400}
+
+  /* Login */
+  .login{max-width:380px;margin:10vh auto;padding:32px;background:var(--panel);border:1px solid var(--line);
+    border-radius:18px;box-shadow:var(--shadow)}
+  .login .logo{width:48px;height:48px;border-radius:14px;margin-bottom:20px}
+  .login h2{margin:0 0 6px;font-size:20px;font-weight:600;letter-spacing:-.01em}
+  .login p{margin:0 0 8px;color:var(--muted);font-size:13px}
+  .login label{display:block;margin:16px 0 6px;font-size:12px;font-weight:500;color:var(--muted)}
+  .login input{width:100%}
+  .login button{width:100%;margin-top:24px;height:42px}
+  .err{color:var(--err);font-size:13px;margin-top:10px;min-height:18px}
+
+  /* Abas */
+  nav.tabs{display:inline-flex;gap:4px;padding:4px;margin-bottom:20px;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px}
+  nav.tabs button{height:34px;background:transparent;color:var(--muted);border:0;border-radius:8px}
+  nav.tabs button:hover:not(:disabled){color:var(--text);filter:none}
+  nav.tabs button.on{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line2),0 1px 2px rgba(0,0,0,.4)}
+
+  /* Números do topo */
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+    display:flex;flex-direction:column;gap:4px}
+  .card .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .card .k{font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .card .ic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--green-bg);color:var(--green)}
+  .card .v{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
+
+  /* Seções */
+  section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:20px}
+  .sec-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .sec-head h3{margin:0;flex:1;font-size:15px;font-weight:600;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .sec-head input.search{width:300px;max-width:100%}
+  .inline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+
+  /* Filtros em grade: colunas iguais, tudo alinhado pela base. */
+  .filters{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px 12px;align-items:end}
+  .filters label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:500;color:var(--muted)}
+  .filters select,.filters input:not([type=checkbox]){width:100%}
+  .filters .grow{grid-column:span 2}
+  .filters label.check{flex-direction:row;align-items:center;gap:10px;height:var(--h);grid-column:span 2;
+    font-size:13px;font-weight:400;color:var(--text);cursor:pointer}
+  .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:18px 0 14px;padding-top:16px;border-top:1px solid var(--line)}
+  .toolbar .muted{flex:1;min-width:200px;font-size:13px}
+
+  /* Tabelas */
+  .scroll{overflow:auto;max-height:440px;border:1px solid var(--line);border-radius:var(--r)}
+  .scroll.short{max-height:320px}
+  .scroll.mid{max-height:360px}
+  table{width:100%;border-collapse:separate;border-spacing:0}
+  /* Texto quebra linha para a tabela caber na largura (sem rolagem lateral); datas, números e
+     status ficam numa linha só. */
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle;overflow-wrap:break-word}
+  th{position:sticky;top:0;z-index:1;background:var(--panel2);font-size:11px;font-weight:600;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  td.num,td.acts,#tDevices td:nth-child(5),#tData td:nth-child(4),#tData td:nth-child(9){white-space:nowrap}
+  #tData th,#tData td{padding:10px}
+  #tData td:nth-child(1){min-width:92px}
+  #tData td:nth-child(2),#tData td:nth-child(3){min-width:115px}
+  #tData td:nth-child(7){min-width:150px}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover td{background:var(--hover)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  td.acts{text-align:right}
+  td.acts a+a{margin-left:16px}
+  .busy{opacity:.55;transition:opacity .15s}
+  .pill{display:inline-flex;align-items:center;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;
+    background:var(--green-bg);color:var(--green)}
+  .pill.dup{background:rgba(232,207,114,.12);color:var(--warn)}
+  .pill.bad{background:rgba(255,159,149,.12);color:var(--err)}
+  a.link{color:var(--green);cursor:pointer;text-decoration:none;font-weight:500;font-size:13px}
+  a.link:hover{text-decoration:underline}
+  .mini{display:inline-block;width:80px;height:6px;background:var(--line);border-radius:99px;overflow:hidden;
+    vertical-align:middle;margin-left:10px}
+  .mini>i{display:block;height:100%;background:linear-gradient(90deg,var(--green-d),var(--green));border-radius:99px}
+  .pager{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px}
+  .pager>div{display:flex;gap:8px}
+  #loadInfo{text-align:center;margin-top:4px}
+
+  /* Janela de edição */
+  dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:24px;
+    width:min(440px,92vw);box-shadow:var(--shadow)}
+  dialog::backdrop{background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}
+  dialog h3{margin:0 0 4px;font-size:17px;font-weight:600}
+  dialog label{display:block;margin:14px 0 6px;font-size:12px;font-weight:500;color:var(--muted)}
+  dialog input,dialog select{width:100%}
+  dialog .linha{display:flex;gap:12px}
+  dialog .linha>div:first-child{flex:1}
+  dialog .linha>div:last-child{width:120px}
+  dialog .nota{margin-top:14px;line-height:1.55}
+  dialog .botoes{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+  @media (max-width:900px){ .cards{grid-template-columns:repeat(2,1fr)} }
+  /* Tela estreita: cada linha da tabela vira um cartão "coluna → valor" (data-label vem do JS). */
+  @media (max-width:980px){
+    .scroll,.scroll.short,.scroll.mid{max-height:none;overflow:visible;border:0;border-radius:0}
+    .scroll thead{display:none}
+    .scroll table,.scroll tbody,.scroll tr,.scroll td{display:block;width:100%}
+    .scroll tbody tr{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:4px 14px;margin-bottom:10px}
+    .scroll tbody tr:hover td{background:transparent}
+    .scroll tbody tr td{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:9px 0;text-align:right;
+      white-space:normal;border-bottom:1px solid var(--line)}
+    .scroll tbody tr td:last-child{border-bottom:0}
+    .scroll td::before{content:attr(data-label);margin-right:auto;font-size:12px;color:var(--muted);text-align:left;white-space:nowrap}
+    .scroll td[data-label=""]::before,.scroll td:not([data-label])::before{display:none}
+    .scroll td:empty{display:none}
+    .scroll td[colspan]{justify-content:center}
+  }
+  @media (max-width:560px){
+    .bar{padding:10px 16px} main{padding:16px 16px 40px} .login{margin:8vh 16px;padding:24px}
+    .cards{gap:12px} .card{padding:14px 16px} .card .v{font-size:24px}
+    .filters{grid-template-columns:1fr 1fr} .filters .grow,.filters label.check{grid-column:1/-1}
+    .sec-head input.search{width:100%} nav.tabs{display:flex} nav.tabs button{flex:1}
+  }
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="brand">
+    <div class="logo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.1-5.7A8.5 8.5 0 1 1 21 11.5z"/></svg></div>
+    <div><h1>Painel de Contatos</h1><small>Cadastro Automático WhatsApp</small></div>
+  </div>
+  <span class="who" id="who"></span>
+  <label class="auto hidden" id="autoWrap"><input type="checkbox" id="autoRefresh" checked> Atualizar sozinho (5 min)</label>
+  <button class="ghost sm hidden" id="btnReload"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg>Atualizar</button>
+  <button class="ghost sm hidden" id="btnLogout"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>Sair</button>
+</div></header>
+
+<div id="viewLogin" class="login">
+  <div class="logo"><svg class="ico" style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.1-5.7A8.5 8.5 0 1 1 21 11.5z"/></svg></div>
+  <h2>Entrar no painel</h2>
+  <p>Use o e-mail e a senha liberados para acessar o painel.</p>
+  <label for="email">E-mail</label><input id="email" type="email" autocomplete="username">
+  <label for="pass">Senha</label><input id="pass" type="password" autocomplete="current-password">
+  <button id="btnLogin">Entrar</button>
+  <div class="err" id="loginErr"></div>
+</div>
+
+<main id="viewApp" class="hidden">
+  <nav class="tabs">
+    <button id="navOverview" class="on">Visão geral</button>
+    <button id="navAnalytics">Analytics · dados e exportação</button>
+  </nav>
+
+  <div id="tabOverview">
+  <div class="cards">
+    <div class="card"><div class="top"><span class="k">Cadastros (sucesso)</span><span class="ic"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg></span></div><div class="v" id="kTotal">–</div><div class="muted" id="kTipos"></div></div>
+    <div class="card"><div class="top"><span class="k">Números únicos</span><span class="ic"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg></span></div><div class="v" id="kUnique">–</div></div>
+    <div class="card"><div class="top"><span class="k">Aparelhos</span><span class="ic"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg></span></div><div class="v" id="kDevices">–</div></div>
+    <div class="card"><div class="top"><span class="k">Hoje</span><span class="ic"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span></div><div class="v" id="kToday">–</div></div>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <h3>Por aparelho <span class="muted" id="dCount"></span></h3>
+      <input id="dSearch" class="search" type="search" placeholder="Buscar aparelho pelo nome ou cidade">
+    </div>
+    <div class="scroll short">
+      <table id="tDevices"><thead><tr>
+        <th>Aparelho</th><th>Cidade do canal</th><th class="num">Cadastros</th><th class="num">Números únicos</th><th>Último cadastro</th><th></th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </section>
+  </div>
+
+  <!-- Só busca os dados quando a aba é aberta (ver showTab). -->
+  <div id="tabAnalytics" class="hidden">
+  <section>
+    <div class="sec-head"><h3>Dados e exportação</h3></div>
+    <div class="filters">
+      <label>Aparelho<select id="fDevice"><option value="">Todos</option></select></label>
+      <label>Cidade do canal<select id="fCity"><option value="">Todas</option></select></label>
+      <label>De<input type="date" id="fFrom"></label>
+      <label>Até<input type="date" id="fTo"></label>
+      <label>Status<select id="fStatus">
+        <option value="SUCCESS">Cadastrados</option><option value="">Todos</option>
+        <option value="DUPLICATE">Já existiam</option><option value="INVALID_NUMBER">Inválidos</option><option value="ERROR">Erros</option>
+      </select></label>
+      <label>Região<select id="fRegion">
+        <option value="">Todas</option><option>Norte</option><option>Nordeste</option>
+        <option>Centro-Oeste</option><option>Sudeste</option><option>Sul</option>
+      </select></label>
+      <label>Estado<select id="fUf"><option value="">Todos</option></select></label>
+      <label>DDD<select id="fDdd"><option value="">Todos</option></select></label>
+      <label>Tipo do número<select id="fTipo">
+        <option value="">Todos</option><option value="br">Brasileiros válidos</option>
+        <option value="estrangeiro">Estrangeiros</option><option value="invalido">Inválidos / incompletos</option>
+      </select></label>
+      <label class="grow">Buscar número ou nome<input id="fSearch" class="search" placeholder="ex: 1199, Maria ou Cliente 0012"></label>
+      <label class="check"><input type="checkbox" id="fUnique"> Só números únicos (sem repetir entre aparelhos)</label>
+    </div>
+    <div class="toolbar">
+      <span class="muted" id="count"></span>
+      <button class="ghost" id="btnCsv"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Exportar CSV</button>
+      <button id="btnXlsx"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Exportar Excel (.xlsx)</button>
+    </div>
+    <div class="scroll">
+      <table id="tData"><thead><tr>
+        <th>Data</th><th>Aparelho</th><th>Cidade do canal</th><th>Número</th><th>DDD</th><th>UF</th><th>Nome no WhatsApp</th><th>Nome gerado</th><th>Status</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+    <div class="pager">
+      <span class="muted" id="pInfo"></span>
+      <div>
+        <button class="ghost sm" id="pPrev">‹ Anterior</button>
+        <button class="ghost sm" id="pNext">Próxima ›</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h3>Distribuição geográfica <span class="muted">segue os filtros acima</span></h3>
+      <label class="inline">Agrupar por
+        <select id="gBy"><option value="ddd">DDD</option><option value="uf">Estado</option><option value="reg">Região</option><option value="city">Cidade do canal</option></select>
+      </label>
+      <button class="ghost" id="btnGeoCsv"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Exportar resumo CSV</button>
+    </div>
+    <div class="scroll mid">
+      <table id="tGeo"><thead><tr>
+        <th id="gCol">DDD</th><th>Detalhe</th><th class="num">Registros</th><th class="num">Números únicos</th><th class="num">% do filtro</th><th></th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </section>
+  </div>
+  <div class="muted" id="loadInfo"></div>
+</main>
+
+<dialog id="dlgEdit">
+  <h3>Editar aparelho</h3>
+  <div class="muted" id="eInfo"></div>
+  <label for="eName">Nome do aparelho</label><input id="eName" maxlength="80">
+  <div class="linha">
+    <div><label for="eCity">Cidade do canal</label><input id="eCity" maxlength="60" placeholder="ex: Rio Claro"></div>
+    <div><label for="eUf">UF</label><select id="eUf"><option value="">—</option></select></div>
+  </div>
+  <div class="muted nota">Deixe cidade e UF vazias para remover a cidade. Os cadastros antigos do aparelho
+    passam a aparecer com os dados novos, e o celular (app 2.5.0 ou mais novo) recebe a mudança na próxima sincronização.</div>
+  <div class="err" id="eErr"></div>
+  <div class="botoes">
+    <button class="ghost" id="eCancel">Cancelar</button>
+    <button id="eSave">Salvar</button>
+  </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const SUPABASE_URL = "https://sgfxawfhmnxwhtecwote.supabase.co";
+const SUPABASE_KEY = "sb_publishable_OZ-fk5-wNbGdH2AqJ6uYqw_PTCTbdJi";
+// Filtros, totais e páginas são calculados no banco (painel/painel_consultas.sql):
+// o painel só baixa a página da tabela. Tudo de uma vez só ao exportar.
+const PAGE = 50, EXPORT_PAGE = 5000, AUTO_REFRESH_MS = 300000, SEARCH_DELAY_MS = 350;
+
+const $ = id => document.getElementById(id);
+
+const REGIONS = {
+  "Norte": ["AC", "AM", "AP", "PA", "RO", "RR", "TO"],
+  "Nordeste": ["AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE"],
+  "Centro-Oeste": ["DF", "GO", "MS", "MT"],
+  "Sudeste": ["ES", "MG", "RJ", "SP"],
+  "Sul": ["PR", "RS", "SC"]
+};
+const UF_NAME = {
+  AC: "Acre", AL: "Alagoas", AP: "Amapá", AM: "Amazonas", BA: "Bahia", CE: "Ceará", DF: "Distrito Federal",
+  ES: "Espírito Santo", GO: "Goiás", MA: "Maranhão", MT: "Mato Grosso", MS: "Mato Grosso do Sul", MG: "Minas Gerais",
+  PA: "Pará", PB: "Paraíba", PR: "Paraná", PE: "Pernambuco", PI: "Piauí", RJ: "Rio de Janeiro", RN: "Rio Grande do Norte",
+  RS: "Rio Grande do Sul", RO: "Rondônia", RR: "Roraima", SC: "Santa Catarina", SP: "São Paulo", SE: "Sergipe", TO: "Tocantins"
+};
+// DDD → [UF, principal cidade/região atendida] (a mesma lista da tabela painel_ddd no banco)
+const DDD = {
+  "11": ["SP", "São Paulo e Grande SP"], "12": ["SP", "São José dos Campos / Vale do Paraíba"], "13": ["SP", "Santos / Baixada Santista"],
+  "14": ["SP", "Bauru / Marília"], "15": ["SP", "Sorocaba"], "16": ["SP", "Ribeirão Preto / São Carlos"],
+  "17": ["SP", "São José do Rio Preto"], "18": ["SP", "Presidente Prudente / Araçatuba"], "19": ["SP", "Campinas / Piracicaba"],
+  "21": ["RJ", "Rio de Janeiro e Grande Rio"], "22": ["RJ", "Campos / Região dos Lagos"], "24": ["RJ", "Volta Redonda / Petrópolis"],
+  "27": ["ES", "Vitória e Grande Vitória"], "28": ["ES", "Cachoeiro de Itapemirim"],
+  "31": ["MG", "Belo Horizonte e região"], "32": ["MG", "Juiz de Fora"], "33": ["MG", "Governador Valadares"],
+  "34": ["MG", "Uberlândia / Triângulo Mineiro"], "35": ["MG", "Poços de Caldas / Sul de MG"], "37": ["MG", "Divinópolis"], "38": ["MG", "Montes Claros"],
+  "41": ["PR", "Curitiba e região"], "42": ["PR", "Ponta Grossa"], "43": ["PR", "Londrina"], "44": ["PR", "Maringá"],
+  "45": ["PR", "Cascavel / Foz do Iguaçu"], "46": ["PR", "Francisco Beltrão / Pato Branco"],
+  "47": ["SC", "Joinville / Blumenau"], "48": ["SC", "Florianópolis"], "49": ["SC", "Chapecó / Lages"],
+  "51": ["RS", "Porto Alegre e região"], "53": ["RS", "Pelotas"], "54": ["RS", "Caxias do Sul"], "55": ["RS", "Santa Maria"],
+  "61": ["DF", "Brasília"], "62": ["GO", "Goiânia"], "64": ["GO", "Rio Verde"], "63": ["TO", "Palmas"],
+  "65": ["MT", "Cuiabá"], "66": ["MT", "Rondonópolis"], "67": ["MS", "Campo Grande"], "68": ["AC", "Rio Branco"], "69": ["RO", "Porto Velho"],
+  "71": ["BA", "Salvador e região"], "73": ["BA", "Ilhéus / Itabuna"], "74": ["BA", "Juazeiro"], "75": ["BA", "Feira de Santana"],
+  "77": ["BA", "Vitória da Conquista / Barreiras"], "79": ["SE", "Aracaju"],
+  "81": ["PE", "Recife e região"], "87": ["PE", "Petrolina"], "82": ["AL", "Maceió"], "83": ["PB", "João Pessoa"], "84": ["RN", "Natal"],
+  "85": ["CE", "Fortaleza"], "88": ["CE", "Juazeiro do Norte"], "86": ["PI", "Teresina"], "89": ["PI", "Picos"],
+  "91": ["PA", "Belém"], "93": ["PA", "Santarém"], "94": ["PA", "Marabá"], "92": ["AM", "Manaus"], "97": ["AM", "Interior do AM"],
+  "95": ["RR", "Boa Vista"], "96": ["AP", "Macapá"], "98": ["MA", "São Luís"], "99": ["MA", "Imperatriz"]
+};
+const NO_DDD = "Sem DDD brasileiro (internacional/outros)";
+const NO_CITY = "Cidade não informada";
+const regionOf = uf => Object.keys(REGIONS).find(k => REGIONS[k].includes(uf)) || "";
+
+function addOpt(sel, value, text) {
+  const o = document.createElement("option"); o.value = value; o.textContent = text; sel.appendChild(o);
+}
+
+/** Refaz as opções de Estado e DDD conforme a Região/Estado escolhidos (mantém a escolha se ainda couber). */
+function fillGeo() {
+  const reg = $("fRegion").value;
+  const ufSel = $("fUf"), keepUf = ufSel.value;
+  const ufs = (reg ? REGIONS[reg] : Object.values(REGIONS).flat()).slice().sort();
+  ufSel.innerHTML = "<option value=''>Todos</option>";
+  ufs.forEach(u => addOpt(ufSel, u, u + " · " + UF_NAME[u]));
+  ufSel.value = ufs.includes(keepUf) ? keepUf : "";
+  const uf = ufSel.value;
+  const dddSel = $("fDdd"), keepDdd = dddSel.value;
+  dddSel.innerHTML = "<option value=''>Todos</option>";
+  Object.keys(DDD).sort()
+    .filter(k => uf ? DDD[k][0] === uf : (!reg || REGIONS[reg].includes(DDD[k][0])))
+    .forEach(k => addOpt(dddSel, k, k + " · " + DDD[k][1] + (uf ? "" : " (" + DDD[k][0] + ")")));
+  if (!reg && !uf) addOpt(dddSel, "-", NO_DDD);
+  dddSel.value = Array.from(dddSel.options).some(o => o.value === keepDdd) ? keepDdd : "";
+}
+
+/** Aplica um recorte geográfico nos filtros (usado pelo link "filtrar" da distribuição). */
+function setGeo(reg, uf, ddd) {
+  $("fRegion").value = reg; fillGeo();
+  $("fUf").value = uf; fillGeo();
+  $("fDdd").value = ddd;
+  applyFilters();
+  $("tData").scrollIntoView({ behavior: "smooth" });
+}
+
+let session = null, resumo = null, page = 0, total = 0, pageRows = [];
+let geoBy = "ddd", geoTotal = 0, geoData = [];
+let loading = false, exporting = false, lastLoadAt = 0;
+// Aba aberta; a Analytics só consulta o banco quando está aberta (analyticsAt = última carga).
+let tab = "overview", analyticsAt = 0;
+// Cada consulta recebe um número; respostas de filtros que já mudaram são descartadas.
+let tableSeq = 0, geoSeq = 0;
+
+try { session = JSON.parse(sessionStorage.getItem("sb_session") || "null"); } catch (e) {}
+
+// Guarda também o refresh token: o access token vale 1h e é renovado sozinho,
+// para a atualização automática não cair em "sessão expirada".
+function saveSession(j, email) {
+  session = {
+    token: j.access_token,
+    refresh: j.refresh_token,
+    expiresAt: j.expires_at || (Math.floor(Date.now() / 1000) + (j.expires_in || 3600)),
+    email: (j.user && j.user.email) || email
+  };
+  sessionStorage.setItem("sb_session", JSON.stringify(session));
+}
+
+async function login(email, password) {
+  const r = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=password&apikey=" + encodeURIComponent(SUPABASE_KEY), {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error_description || j.msg || j.message || ("Erro " + r.status));
+  saveSession(j, email);
+}
+
+/** Renova o login se faltar menos de 2 min para vencer. Sem refresh token (sessão antiga), segue como está. */
+async function ensureToken() {
+  if (!session.refresh || Date.now() / 1000 < session.expiresAt - 120) return;
+  const r = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token", {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: session.refresh })
+  });
+  if (r.status >= 400 && r.status < 500) throw new Error("AUTH");
+  if (!r.ok) throw new Error("Erro " + r.status + " ao renovar o login");
+  saveSession(await r.json(), session.email);
+}
+
+function authHeaders(extra) {
+  return Object.assign({ apikey: SUPABASE_KEY, Authorization: "Bearer " + session.token }, extra || {});
+}
+
+/** Chama uma função do painel no banco (painel_resumo, painel_pagina, painel_geo). */
+async function rpc(fn, body) {
+  await ensureToken();
+  const r = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, {
+    method: "POST",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(body || {})
+  });
+  if (r.status === 401 || r.status === 403) throw new Error("AUTH");
+  if (r.status === 404) throw new Error("função " + fn + " não encontrada no banco; rode painel/painel_consultas.sql no Supabase");
+  if (!r.ok) {
+    let msg = "";
+    try { msg = (await r.json()).message || ""; } catch (e) {}
+    throw new Error("Erro " + r.status + " ao ler os dados" + (msg ? " (" + msg + ")" : ""));
+  }
+  return r.json();
+}
+
+/** Filtros da tela no formato que painel_filtrados (SQL) espera. */
+function currentFilters() {
+  const v = id => $(id).value;
+  const f = {
+    aparelho: v("fDevice"), cidade: v("fCity"), status: v("fStatus"),
+    regiao: v("fRegion"), uf: v("fUf"), ddd: v("fDdd"), tipo: v("fTipo"),
+    busca: v("fSearch").trim(), unicos: $("fUnique").checked
+  };
+  // dias inteiros no fuso do computador, como antes
+  if (v("fFrom")) f.de = new Date(v("fFrom") + "T00:00:00").toISOString();
+  if (v("fTo")) f.ate = new Date(v("fTo") + "T23:59:59.999").toISOString();
+  return f;
+}
+
+const fmtDate = s => new Date(s).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+const fmtInt = n => Number(n || 0).toLocaleString("pt-BR");
+
+function renderSummary() {
+  $("kTotal").textContent = fmtInt(resumo.total);
+  $("kTipos").textContent = resumo.estrangeiros == null ? ""
+    : fmtInt(resumo.estrangeiros) + " estrangeiros · " + fmtInt(resumo.invalidos) + " inválidos";
+  $("kUnique").textContent = fmtInt(resumo.unicos);
+  $("kDevices").textContent = fmtInt(resumo.aparelhos.length);
+  $("kToday").textContent = fmtInt(resumo.hoje);
+  renderDevices();
+
+  const sel = $("fDevice"), keep = sel.value;
+  sel.innerHTML = "<option value=''>Todos</option>";
+  resumo.aparelhos.map(d => d.nome).sort().forEach(n => addOpt(sel, n, n || "(sem nome)"));
+  sel.value = Array.from(sel.options).some(o => o.value === keep) ? keep : "";
+
+  const csel = $("fCity"), keepCity = csel.value;
+  csel.innerHTML = "<option value=''>Todas</option>";
+  resumo.cidades.forEach(c => addOpt(csel, c.k, c.nome));
+  if (resumo.sem_cidade) addOpt(csel, "-", NO_CITY);
+  csel.value = Array.from(csel.options).some(o => o.value === keepCity) ? keepCity : "";
+}
+
+/** Sem acento e em minúsculas, para a busca achar "Joao" em "João". */
+const norm = s => String(s || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
+/** Tabela "Por aparelho", filtrada pela busca por nome (poucos aparelhos: filtra aqui mesmo). */
+function renderDevices() {
+  if (!resumo) return;
+  const q = norm($("dSearch").value.trim());
+  const all = resumo.aparelhos;
+  const list = all.filter(d => !q || norm(d.nome || "(sem nome)").includes(q) || norm(d.cidade).includes(q));
+  $("dCount").textContent = q ? list.length + " de " + all.length + " aparelhos" : "";
+  const tb = $("tDevices").querySelector("tbody");
+  tb.innerHTML = "";
+  if (q && !list.length) {
+    tb.innerHTML = "<tr><td colspan='6' class='muted'>Nenhum aparelho com esse nome ou cidade.</td></tr>";
+    return;
+  }
+  list.forEach(d => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td></td><td></td><td class='num'></td><td class='num'></td><td></td><td class='acts'></td>";
+    tr.children[0].textContent = d.nome || "(sem nome)";
+    tr.children[1].textContent = d.cidade || "—";
+    if (!d.cidade) tr.children[1].className = "muted";
+    tr.children[2].textContent = fmtInt(d.n);
+    tr.children[3].textContent = fmtInt(d.u);
+    tr.children[4].textContent = fmtDate(d.ultimo);
+    const a = document.createElement("a"); a.className = "link"; a.textContent = "filtrar";
+    a.onclick = () => { $("fDevice").value = d.nome; showTab("analytics", true); onFilterChange(); };
+    const ed = document.createElement("a"); ed.className = "link"; ed.textContent = "editar";
+    ed.onclick = () => openEdit(d);
+    tr.children[5].append(a, ed);
+    tb.appendChild(tr);
+  });
+}
+
+// --- Editar aparelho (tabela "aparelhos", supabase_aparelhos.sql) ---
+let editing = null;
+Object.keys(UF_NAME).sort().forEach(u => addOpt($("eUf"), u, u));
+
+function openEdit(d) {
+  editing = d;
+  $("eName").value = d.nome || "";
+  $("eCity").value = d.cidade_nome || "";
+  $("eUf").value = d.cidade_uf || "";
+  $("eInfo").textContent = (d.ids || []).length > 1
+    ? "Vale para as " + d.ids.length + " instalações do app com este nome (ex.: app reinstalado)."
+    : "";
+  $("eErr").textContent = "";
+  $("eSave").disabled = false;
+  $("dlgEdit").showModal();
+  $("eName").focus();
+}
+
+async function saveEdit() {
+  const nome = $("eName").value.trim().replace(/\s+/g, " ");
+  const cidade = $("eCity").value.trim().replace(/\s+/g, " ");
+  const uf = $("eUf").value;
+  if (!nome) return $("eErr").textContent = "Digite o nome do aparelho.";
+  if (!cidade !== !uf) return $("eErr").textContent = "Preencha cidade e UF juntas (ou deixe as duas vazias).";
+  $("eSave").disabled = true; $("eErr").textContent = "";
+  try {
+    await rpc("aparelho_salvar", { p_device_ids: editing.ids, p_nome: nome, p_cidade: cidade, p_uf: uf });
+  } catch (e) {
+    $("eSave").disabled = false;
+    if (e.message === "AUTH") { $("dlgEdit").close(); logout("Sessão expirada ou sem permissão. Entre de novo."); return; }
+    $("eErr").textContent = "Não salvou: " + e.message;
+    return;
+  }
+  // Se a tabela estava filtrada pelo nome antigo, passa a filtrar pelo novo.
+  if ($("fDevice").value === editing.nome) {
+    addOpt($("fDevice"), nome, nome);
+    $("fDevice").value = nome;
+  }
+  $("dlgEdit").close();
+  await waitIdle();
+  load();
+}
+
+/** Espera uma atualização em andamento terminar (senão load() seria ignorado). */
+async function waitIdle() {
+  while (loading) await new Promise(r => setTimeout(r, 100));
+}
+
+$("eSave").onclick = saveEdit;
+$("eCancel").onclick = () => $("dlgEdit").close();
+["eName", "eCity"].forEach(id => $(id).addEventListener("keydown", e => { if (e.key === "Enter") saveEdit(); }));
+
+/** Busca a página atual da tabela. [keepPage] !== true volta para a 1ª página. */
+async function fetchTable(keepPage) {
+  const seq = ++tableSeq;
+  if (keepPage !== true) page = 0;
+  $("tData").classList.add("busy");
+  const res = await rpc("painel_pagina", { f: currentFilters(), p_offset: page * PAGE, p_limit: PAGE });
+  if (seq !== tableSeq) return;
+  // A página saiu do fim (o total diminuiu numa atualização): vai para a última.
+  if (!res.linhas.length && res.total > 0 && page > 0) {
+    page = Math.ceil(res.total / PAGE) - 1;
+    return fetchTable(true);
+  }
+  pageRows = res.linhas; total = res.total;
+  $("tData").classList.remove("busy");
+  renderTable();
+}
+
+async function fetchGeo() {
+  const seq = ++geoSeq, by = $("gBy").value;
+  $("tGeo").classList.add("busy");
+  const res = await rpc("painel_geo", { f: currentFilters(), agrupar: by });
+  if (seq !== geoSeq) return;
+  geoBy = by; geoTotal = res.total; geoData = res.grupos;
+  $("tGeo").classList.remove("busy");
+  renderGeo();
+}
+
+function showError(e) {
+  if (e.message === "AUTH") { logout("Sessão expirada ou sem permissão. Entre de novo."); return; }
+  $("count").textContent = "Falha ao carregar: " + e.message;
+  $("tData").classList.remove("busy"); $("tGeo").classList.remove("busy");
+}
+
+/** [keepPage] === true: atualização automática, continua na mesma página da tabela. */
+function applyFilters(keepPage) {
+  return Promise.all([fetchTable(keepPage === true), fetchGeo()]).then(() => { analyticsAt = Date.now(); });
+}
+
+/**
+ * Troca de aba. A Analytics carrega ao ser aberta (e recarrega se os dados tiverem
+ * mais de 5 min); [noLoad]: quem chama já vai buscar os dados.
+ */
+function showTab(name, noLoad) {
+  tab = name;
+  const analytics = name === "analytics";
+  $("tabOverview").classList.toggle("hidden", analytics);
+  $("tabAnalytics").classList.toggle("hidden", !analytics);
+  $("navOverview").classList.toggle("on", !analytics);
+  $("navAnalytics").classList.toggle("on", analytics);
+  try { history.replaceState(null, "", analytics ? "#analytics" : location.pathname + location.search); } catch (e) {}
+  if (analytics && !noLoad && session && Date.now() - analyticsAt > AUTO_REFRESH_MS) {
+    if (!analyticsAt) $("count").textContent = "Carregando…";
+    applyFilters(analyticsAt > 0).catch(showError);
+  }
+}
+function onFilterChange() { applyFilters().catch(showError); }
+
+let searchTimer = 0;
+function onSearchInput() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(onFilterChange, SEARCH_DELAY_MS);
+}
+
+const GROUP_LABEL = { ddd: "DDD", uf: "Estado", reg: "Região", city: "Cidade do canal" };
+
+/** Grupos já somados pelo banco → linhas da tabela (nome, detalhe, % e destino do "filtrar"). */
+function geoGroups() {
+  return geoData.map(g => {
+    const pct = g.n / Math.max(geoTotal, 1) * 100, k = g.k;
+    if (geoBy === "city") {
+      const detail = g.aparelhos + (g.aparelhos === 1 ? " aparelho" : " aparelhos") +
+        (g.ddd_top ? " · DDD mais comum: " + g.ddd_top + " (" + Math.round(g.ddd_top_n / g.n * 100) + "%)" : "");
+      return { name: k ? g.nome : NO_CITY, detail, n: g.n, u: g.u, pct, city: k || "-" };
+    }
+    let name = k, detail, geo;
+    if (!k) { name = "—"; detail = NO_DDD; geo = ["", "", "-"]; }
+    else if (geoBy === "ddd") { const d = DDD[k] || ["", ""]; detail = d[1] + " · " + d[0]; geo = [regionOf(d[0]), d[0], k]; }
+    else if (geoBy === "uf") { detail = (UF_NAME[k] || k) + " · " + regionOf(k); geo = [regionOf(k), k, ""]; }
+    else { detail = (REGIONS[k] || []).join(", "); geo = [k, "", ""]; }
+    return { name, detail, n: g.n, u: g.u, pct, geo };
+  });
+}
+
+function renderGeo() {
+  $("gCol").textContent = GROUP_LABEL[geoBy];
+  const tb = $("tGeo").querySelector("tbody");
+  tb.innerHTML = "";
+  geoGroups().forEach(g => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td></td><td></td><td class='num'></td><td class='num'></td><td class='num'><span></span><span class='mini'><i></i></span></td><td></td>";
+    tr.children[0].textContent = g.name;
+    tr.children[1].textContent = g.detail;
+    tr.children[2].textContent = fmtInt(g.n);
+    tr.children[3].textContent = fmtInt(g.u);
+    tr.children[4].firstChild.textContent = g.pct.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%";
+    tr.children[4].querySelector("i").style.width = g.pct + "%";
+    const a = document.createElement("a"); a.className = "link"; a.textContent = "filtrar";
+    a.onclick = g.city
+      ? () => { $("fCity").value = g.city; applyFilters().catch(showError); $("tData").scrollIntoView({ behavior: "smooth" }); }
+      : () => setGeo(g.geo[0], g.geo[1], g.geo[2]);
+    tr.children[5].appendChild(a);
+    tb.appendChild(tr);
+  });
+}
+
+function geoExportData() {
+  const col = GROUP_LABEL[geoBy];
+  return geoGroups().map(g => ({
+    [col]: g.name, "Detalhe": g.detail, "Registros": g.n, "Números únicos": g.u,
+    "% do filtro": Math.round(g.pct * 10) / 10
+  }));
+}
+
+const STATUS_LABEL = { SUCCESS: "Cadastrado", DUPLICATE: "Já existia", INVALID_NUMBER: "Inválido", ERROR: "Erro" };
+// Tipo do número (painel_tipo_numero no banco)
+const TIPO_LABEL = { br: "Brasileiro", estrangeiro: "Estrangeiro", invalido: "Inválido/incompleto" };
+
+function renderCount() {
+  $("count").textContent = fmtInt(total) + " registros no filtro atual";
+}
+
+function renderTable() {
+  const pages = Math.max(1, Math.ceil(total / PAGE));
+  const tb = $("tData").querySelector("tbody");
+  tb.innerHTML = "";
+  pageRows.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td><span class='pill'></span></td>";
+    tr.children[0].textContent = fmtDate(r.registered_at);
+    tr.children[1].textContent = r.device_name;
+    tr.children[2].textContent = r.cidade || "—";
+    tr.children[3].textContent = r.number;
+    if (r.tipo && r.tipo !== "br") {
+      const t = document.createElement("span");
+      t.className = "pill " + (r.tipo === "invalido" ? "bad" : "dup");
+      t.style.marginLeft = "6px";
+      t.textContent = TIPO_LABEL[r.tipo];
+      tr.children[3].appendChild(t);
+    }
+    tr.children[4].textContent = r.ddd || "—";
+    tr.children[5].textContent = r.uf || "—";
+    tr.children[6].textContent = r.whatsapp_name || "";
+    tr.children[7].textContent = r.contact_name || "";
+    const pill = tr.children[8].firstChild;
+    pill.textContent = STATUS_LABEL[r.status] || r.status;
+    if (r.status === "DUPLICATE") pill.classList.add("dup");
+    if (r.status === "INVALID_NUMBER" || r.status === "ERROR") pill.classList.add("bad");
+    tb.appendChild(tr);
+  });
+  if (!exporting) renderCount();
+  $("pInfo").textContent = "Página " + (page + 1) + " de " + fmtInt(pages);
+  $("pPrev").disabled = page === 0;
+  $("pNext").disabled = page >= pages - 1;
+}
+
+/** Como rpc, mas se o banco estiver ocupado (tempo esgotado, erro 5xx ou rede) espera
+ *  e tenta o mesmo bloco de novo, até 3 vezes, em vez de perder a exportação inteira. */
+async function rpcComRetentativa(fn, body) {
+  for (let tentativa = 1; ; tentativa++) {
+    try {
+      return await rpc(fn, body);
+    } catch (e) {
+      const temporario = /statement timeout|Erro 5\d\d|Failed to fetch/i.test(e.message);
+      if (!temporario || tentativa > 3) throw e;
+      $("count").textContent = "Banco ocupado, tentando de novo (" + tentativa + "/3)…";
+      await new Promise(ok => setTimeout(ok, 5000 * tentativa));
+    }
+  }
+}
+
+/** Exportação: só aqui baixa todos os registros do filtro, em blocos. */
+async function fetchAllFiltered() {
+  const f = currentFilters(), all = [];
+  let antesEm = null, antesId = null;
+  for (;;) {
+    $("count").textContent = "Preparando exportação… " + fmtInt(all.length) + " de " + fmtInt(total);
+    // Cada bloco continua da última linha do anterior (sem offset): cadastros que chegam
+    // durante a exportação são mais novos e não empurram nem repetem linhas.
+    const linhas = await rpcComRetentativa("painel_exportar", { f, p_antes_em: antesEm, p_antes_id: antesId, p_limit: EXPORT_PAGE });
+    linhas.forEach(r => all.push(r));
+    if (linhas.length < EXPORT_PAGE) break;
+    antesEm = linhas[linhas.length - 1].registered_at;
+    antesId = linhas[linhas.length - 1].id;
+  }
+  return all;
+}
+
+function exportData(list) {
+  return list.map(r => ({
+    "Data": fmtDate(r.registered_at),
+    "Aparelho": r.device_name,
+    "Cidade do canal": r.cidade || "",
+    "Número": r.number,
+    "Tipo do número": TIPO_LABEL[r.tipo] || "",
+    "DDD": r.ddd || "",
+    "UF": r.uf || "",
+    "Região": r.regiao || "",
+    "Nome no WhatsApp": r.whatsapp_name || "",
+    "Nome gerado": r.contact_name || "",
+    "Status": r.status
+  }));
+}
+function stamp() { return new Date().toISOString().slice(0, 10); }
+
+function downloadBlob(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function writeCsv(data, name) {
+  if (!data.length) return alert("Nenhum registro no filtro atual.");
+  const cols = Object.keys(data[0]);
+  const esc = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const lines = [cols.map(esc).join(";")].concat(data.map(r => cols.map(c => esc(r[c])).join(";")));
+  downloadBlob(new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" }), name);
+}
+
+/** Trava os botões de exportação enquanto baixa; [build] recebe as linhas do filtro. */
+async function runExport(build) {
+  if (exporting) return;
+  if (!total) return alert("Nenhum registro no filtro atual.");
+  exporting = true;
+  $("btnXlsx").disabled = $("btnCsv").disabled = true;
+  try {
+    build(exportData(await fetchAllFiltered()));
+  } catch (e) {
+    if (e.message === "AUTH") { exporting = false; logout("Sessão expirada ou sem permissão. Entre de novo."); return; }
+    alert("Falha ao exportar: " + e.message);
+  } finally {
+    exporting = false;
+    $("btnXlsx").disabled = $("btnCsv").disabled = false;
+    renderCount();
+  }
+}
+
+function exportCsv() { runExport(data => writeCsv(data, "contatos_" + stamp() + ".csv")); }
+function exportGeoCsv() { writeCsv(geoExportData(), "resumo_" + geoBy + "_" + stamp() + ".csv"); }
+
+function exportXlsx() {
+  if (typeof XLSX === "undefined") return alert("Não consegui carregar o gerador de Excel (precisa de internet). Use o CSV.");
+  runExport(data => {
+    if (!data.length) return alert("Nenhum registro no filtro atual.");
+    const ws = XLSX.utils.json_to_sheet(data);
+    // coluna Número como TEXTO (evita notação científica no Excel)
+    const numCol = Object.keys(data[0]).indexOf("Número");
+    const range = XLSX.utils.decode_range(ws["!ref"]);
+    for (let r = range.s.r + 1; r <= range.e.r; r++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c: numCol })];
+      if (cell) { cell.t = "s"; cell.z = "@"; }
+    }
+    ws["!cols"] = [{ wch: 18 }, { wch: 24 }, { wch: 22 }, { wch: 18 }, { wch: 6 }, { wch: 5 }, { wch: 13 }, { wch: 24 }, { wch: 30 }, { wch: 14 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Contatos");
+    // Segunda aba: resumo pelo agrupamento escolhido (DDD, estado, região ou cidade do canal)
+    const gs = XLSX.utils.json_to_sheet(geoExportData());
+    gs["!cols"] = [{ wch: 24 }, { wch: 44 }, { wch: 11 }, { wch: 15 }, { wch: 11 }];
+    XLSX.utils.book_append_sheet(wb, gs, "Resumo por " + { ddd: "DDD", uf: "estado", reg: "região", city: "cidade" }[geoBy]);
+    XLSX.writeFile(wb, "contatos_" + stamp() + ".xlsx");
+  });
+}
+
+// Último resumo carregado (cartões e "Por aparelho"; sem números de clientes), para a tela
+// aparecer na hora ao abrir enquanto busca o atual. Apagado ao sair.
+const RESUMO_KEY = "painel_resumo";
+function saveResumo() {
+  try { localStorage.setItem(RESUMO_KEY, JSON.stringify({ email: session.email, resumo })); } catch (e) {}
+}
+function restoreResumo() {
+  try {
+    const c = JSON.parse(localStorage.getItem(RESUMO_KEY) || "null");
+    if (!c || c.email !== session.email || !c.resumo) return false;
+    resumo = c.resumo;
+    renderSummary();
+    return true;
+  } catch (e) { return false; }
+}
+const fmtTime = s => new Date(s).toLocaleTimeString("pt-BR");
+
+/** [silent]: atualização automática — mantém a página e, se falhar, os dados já na tela. */
+async function load(silent) {
+  if (loading || !session) return;
+  loading = true;
+  const s = silent === true;
+  if (!s) $("loadInfo").textContent = "Carregando…";
+  try {
+    const [res] = await Promise.all([rpc("painel_resumo", {}), tab === "analytics" ? applyFilters(s) : null]);
+    resumo = res;
+    renderSummary();
+    saveResumo();
+    lastLoadAt = Date.now();
+    // gerado_em: o banco guarda o resumo pronto e refaz a cada 5 minutos (painel_consultas.sql, item 9)
+    $("loadInfo").textContent = fmtInt(resumo.registros) + " registros no banco · dados de " + fmtTime(resumo.gerado_em || Date.now());
+  } catch (e) {
+    loading = false;
+    if (e.message === "AUTH") { logout("Sessão expirada ou sem permissão. Entre de novo."); return; }
+    $("loadInfo").textContent = s
+      ? "Falha ao atualizar às " + new Date().toLocaleTimeString("pt-BR") + " (" + e.message + "); tenta de novo em 5 min."
+      : "Falha ao carregar: " + e.message;
+    $("tData").classList.remove("busy"); $("tGeo").classList.remove("busy");
+    return;
+  }
+  loading = false;
+}
+
+function autoRefreshOn() { return $("autoRefresh").checked; }
+
+try { if (localStorage.getItem("painel_auto_refresh") === "0") $("autoRefresh").checked = false; } catch (e) {}
+$("autoRefresh").addEventListener("change", () => {
+  try { localStorage.setItem("painel_auto_refresh", autoRefreshOn() ? "1" : "0"); } catch (e) {}
+  if (autoRefreshOn()) load(true);
+});
+
+// Com a aba em segundo plano o navegador atrasa este timer; ao voltar para a aba,
+// atualiza na hora se os dados estiverem velhos. Não atualiza no meio de uma exportação.
+setInterval(() => { if (session && autoRefreshOn() && !document.hidden && !exporting) load(true); }, AUTO_REFRESH_MS);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && session && autoRefreshOn() && !exporting && Date.now() - lastLoadAt > AUTO_REFRESH_MS) load(true);
+});
+
+function showApp() {
+  $("viewLogin").classList.add("hidden");
+  $("viewApp").classList.remove("hidden");
+  $("btnLogout").classList.remove("hidden");
+  $("btnReload").classList.remove("hidden");
+  $("autoWrap").classList.remove("hidden");
+  $("who").textContent = session.email;
+  // F5 com a Analytics aberta volta nela (o load abaixo já busca os dados dela).
+  showTab(location.hash === "#analytics" ? "analytics" : "overview", true);
+  const shown = restoreResumo();
+  load();
+  if (shown) $("loadInfo").textContent = "Mostrando os dados de " + fmtTime(resumo.gerado_em || Date.now()) + " · atualizando…";
+}
+
+function logout(msg) {
+  session = null; sessionStorage.removeItem("sb_session"); analyticsAt = 0;
+  try { localStorage.removeItem(RESUMO_KEY); } catch (e) {}
+  $("viewApp").classList.add("hidden"); $("viewLogin").classList.remove("hidden");
+  $("btnLogout").classList.add("hidden"); $("btnReload").classList.add("hidden");
+  $("autoWrap").classList.add("hidden");
+  $("who").textContent = ""; $("loginErr").textContent = msg || "";
+}
+
+$("btnLogin").onclick = async () => {
+  $("loginErr").textContent = ""; $("btnLogin").disabled = true;
+  try { await login($("email").value.trim(), $("pass").value); $("pass").value = ""; showApp(); }
+  catch (e) {
+    $("loginErr").textContent = /Invalid login/i.test(e.message) ? "E-mail ou senha incorretos."
+      : /Failed to fetch|NetworkError|Load failed/i.test(e.message)
+        ? "O navegador bloqueou a conexão com o Supabase (" + e.message + "). Origem da página: " + location.origin + ". Tente em janela anônima/outro navegador, sem extensões, ou veja a aba Console (F12)."
+        : e.message;
+  }
+  $("btnLogin").disabled = false;
+};
+$("pass").addEventListener("keydown", e => { if (e.key === "Enter") $("btnLogin").click(); });
+$("btnLogout").onclick = () => logout("");
+$("btnReload").onclick = () => load();
+$("navOverview").onclick = () => showTab("overview");
+$("navAnalytics").onclick = () => showTab("analytics");
+["fDevice", "fCity", "fFrom", "fTo", "fStatus", "fUnique", "fDdd", "fTipo"].forEach(id => $(id).addEventListener("change", onFilterChange));
+["fRegion", "fUf"].forEach(id => $(id).addEventListener("change", () => { fillGeo(); onFilterChange(); }));
+$("gBy").addEventListener("change", () => fetchGeo().catch(showError));
+$("btnGeoCsv").onclick = exportGeoCsv;
+fillGeo();
+$("fSearch").addEventListener("input", onSearchInput);
+$("dSearch").addEventListener("input", renderDevices);
+$("pPrev").onclick = () => { page--; fetchTable(true).catch(showError); };
+$("pNext").onclick = () => { page++; fetchTable(true).catch(showError); };
+$("btnCsv").onclick = exportCsv;
+$("btnXlsx").onclick = exportXlsx;
+
+// No celular as tabelas viram cartões: cada célula leva o nome da coluna (ver CSS data-label).
+for (const t of ["tDevices", "tData", "tGeo"].map($)) {
+  new MutationObserver(function() {
+    const nomes = Array.from(t.tHead.rows[0].cells, th => th.textContent);
+    for (const tr of t.tBodies[0].rows) for (const td of tr.cells) if (td.colSpan === 1) td.dataset.label = nomes[td.cellIndex];
+  }).observe(t.tBodies[0], { childList: true });
+}
+
+if (session && session.token) showApp();
+// Sinal de vida para o servidor local (painel_app.py). Ao fechar ou recarregar a aba avisa
+// com /bye; num F5 a página nova volta a pingar logo e o servidor continua de pé.
+// Só no EXE: no site (GitHub Pages) não há servidor para avisar.
+if (location.hostname === "127.0.0.1") {
+  function ping() { fetch('/ping', { cache: 'no-store' }).catch(function(){}); }
+  ping();
+  setInterval(ping, 5000);
+  addEventListener('pageshow', ping);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) ping(); });
+  addEventListener('pagehide', function(){ try { navigator.sendBeacon('/bye'); } catch (e) {} });
+}
+</script>
+</body>
+</html>
